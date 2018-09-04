@@ -13,12 +13,19 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Configuration
 public class BeanConfiguration {
 
     @Value("${socket.port}")
     private int port;
+    @Value("${mq.size}")
+    private int mqSize;
     @Autowired
     private MyServletContextInitializer initializer;
     // todo:slf4j logback to file
@@ -39,6 +46,12 @@ public class BeanConfiguration {
         } catch (Exception ex) {
             logger.error("fail to open socket on port:" + port + "exception:" + ex);
         }
+        return null;
+    }
+
+    @Bean
+    public AtomicReference<BlockingQueue> blockingQueue() {
+        // todo:
         return null;
     }
 }
