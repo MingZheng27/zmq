@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Aspect
@@ -27,7 +29,12 @@ public class OfferAspect {
     // advice
     @Before("offer()")
     public void beforeOffer(JoinPoint joinPoint) {
-        File logFile = new File("./log/" + new Date() + ".log");
+        File dir = new File("log");
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        File logFile = new File("log/" + getDate(new Date()) + ".log");
+        System.out.println(logFile.getAbsolutePath());
         if (!logFile.exists()) {
             try {
                 if (!logFile.createNewFile()) {
@@ -72,6 +79,11 @@ public class OfferAspect {
     @After("offer()")
     public void afterOffer() {
 
+    }
+
+    private String getDate(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        return dateFormat.format(date);
     }
 
 }

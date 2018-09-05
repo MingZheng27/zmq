@@ -1,5 +1,6 @@
 package com.zm.zmq.businesslogic;
 
+import com.zm.zmq.config.ConfigBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +21,16 @@ public class ReadWriteHandler {
 
     // flag for data change
     private volatile boolean isDataChange;
-    @Value("${mq.writeThreshold}")
-    private int threshold = 1000;
+
+    @Autowired
+    private ConfigBean config;
+
     private long lastWriteTime;
     private static final int BYTE_BUFF_SIZE = 1024;
 
     public void handleWrite(SelectionKey key) {
         // todo:flag is true and Threshold > a special time\
-        if (isDataChange && (System.currentTimeMillis() - lastWriteTime) > threshold) {
+        if (isDataChange && (System.currentTimeMillis() - lastWriteTime) > config.getThreshold()) {
             // todo: writeData
             lastWriteTime = System.currentTimeMillis();
         }

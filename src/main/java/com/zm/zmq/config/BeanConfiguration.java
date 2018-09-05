@@ -14,8 +14,9 @@ import java.nio.channels.ServerSocketChannel;
 @Configuration
 public class BeanConfiguration {
 
-    @Value("${socket.port}")
-    private int port;
+    @Autowired
+    private ConfigBean config;
+
     @Autowired
     private MyServletContextInitializer initializer;
     // todo:slf4j logback to file
@@ -24,15 +25,15 @@ public class BeanConfiguration {
     @Bean
     public ServerSocketChannel serverSocket() {
         try {
-            if (initializer.isSocketOn()) {
+            if (config.isSocketOn()) {
                 ServerSocketChannel serverSocket = ServerSocketChannel.open();
-                serverSocket.socket().bind(new InetSocketAddress(port));
+                serverSocket.socket().bind(new InetSocketAddress(config.getPort()));
                 serverSocket.configureBlocking(false);
-                logger.info("socket start and listening on port:" + port);
+                logger.info("socket start and listening on port:" + config.getPort());
                 return serverSocket;
             }
         } catch (Exception ex) {
-            logger.error("fail to open socket on port:" + port + "exception:" + ex);
+            logger.error("fail to open socket on port:" + config.getPort() + "exception:" + ex);
         }
         return null;
     }

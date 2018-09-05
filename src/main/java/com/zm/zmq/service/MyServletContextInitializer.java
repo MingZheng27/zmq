@@ -2,6 +2,7 @@ package com.zm.zmq.service;
 
 import com.google.common.collect.Lists;
 import com.zm.zmq.businesslogic.ReadWriteHandler;
+import com.zm.zmq.config.ConfigBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,21 +28,21 @@ public class MyServletContextInitializer implements CommandLineRunner {
     private ServerSocketChannel serverSocket;
     @Autowired
     private ReadWriteHandler handler;
-    @Value("${socket.isSocketOn}")
-    private volatile boolean isSocketOn;
+    @Autowired
+    private ConfigBean config;
     private Thread socketThread;
     private static Logger logger = LoggerFactory.getLogger(MyServletContextInitializer.class);
     private List<SocketChannel> socketList;
 
     @Override
     public void run(String... args) throws Exception {
-        if (null != serverSocket && isSocketOn) {
+        if (null != serverSocket && config.isSocketOn()) {
             socketList = Lists.newArrayList();
             try {
                 final Selector selector = Selector.open();
                 serverSocket.register(selector, SelectionKey.OP_ACCEPT);
                 socketThread = new Thread(() -> {
-                    while (isSocketOn && selector.isOpen()) {
+                    while (config.isSocketOn() && selector.isOpen()) {
                         Set<SelectionKey> selectionKeys = selector.selectedKeys();
                         Iterator<SelectionKey> it = selectionKeys.iterator();
                         while (it.hasNext()) {
@@ -68,13 +69,5 @@ public class MyServletContextInitializer implements CommandLineRunner {
                 logger.error("failed to open or register selector to channel, ex:" + ex);
             }
         }
-    }
-
-    public boolean isSocketOn() {
-        return isSocketOn;
-    }
-
-    public void setSocketOn(boolean socketOn) {
-        isSocketOn = socketOn;
     }
 }
