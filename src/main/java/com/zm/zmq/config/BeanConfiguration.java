@@ -9,23 +9,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Configuration
 public class BeanConfiguration {
 
     @Value("${socket.port}")
     private int port;
-    @Value("${mq.size}")
-    private int mqSize;
     @Autowired
     private MyServletContextInitializer initializer;
     // todo:slf4j logback to file
@@ -38,8 +28,6 @@ public class BeanConfiguration {
                 ServerSocketChannel serverSocket = ServerSocketChannel.open();
                 serverSocket.socket().bind(new InetSocketAddress(port));
                 serverSocket.configureBlocking(false);
-                // Selector selector = Selector.open();
-                // serverSocket.register(selector, SelectionKey.OP_ACCEPT);
                 logger.info("socket start and listening on port:" + port);
                 return serverSocket;
             }
@@ -49,9 +37,4 @@ public class BeanConfiguration {
         return null;
     }
 
-    @Bean
-    public AtomicReference<BlockingQueue> blockingQueue() {
-        // todo:
-        return null;
-    }
 }

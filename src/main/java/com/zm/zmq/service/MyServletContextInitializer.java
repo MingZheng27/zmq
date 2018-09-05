@@ -31,15 +31,15 @@ public class MyServletContextInitializer implements CommandLineRunner {
     private volatile boolean isSocketOn;
     private Thread socketThread;
     private static Logger logger = LoggerFactory.getLogger(MyServletContextInitializer.class);
-    private AtomicReference<List<SocketChannel>> atomicSocketList = new AtomicReference<>();
+    private List<SocketChannel> socketList;
 
     @Override
     public void run(String... args) throws Exception {
         if (null != serverSocket && isSocketOn) {
-            atomicSocketList.set(Lists.newArrayList());
+            socketList = Lists.newArrayList();
             try {
                 final Selector selector = Selector.open();
-                serverSocket.register(selector, SelectionKey.OP_READ);
+                serverSocket.register(selector, SelectionKey.OP_ACCEPT);
                 socketThread = new Thread(() -> {
                     while (isSocketOn && selector.isOpen()) {
                         Set<SelectionKey> selectionKeys = selector.selectedKeys();
@@ -50,7 +50,7 @@ public class MyServletContextInitializer implements CommandLineRunner {
                                 try {
                                     // todo:客户端连接SocketChannel在accept的时候获取到
                                     SocketChannel socketChannel = ((ServerSocketChannel) key.channel()).accept();
-                                    atomicSocketList.get().add(socketChannel);
+                                    socketList.add(socketChannel);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
