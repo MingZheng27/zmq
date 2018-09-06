@@ -1,6 +1,7 @@
 package com.zm.zmq.businesslogic;
 
 import com.alibaba.fastjson.JSON;
+import com.zm.zmq.entity.LogEntity;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -14,6 +15,7 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 @Aspect
 @Component
@@ -26,15 +28,16 @@ public class OfferAspect {
     public void offer() {
     }
 
+    // write log
     // advice
     @Before("offer()")
     public void beforeOffer(JoinPoint joinPoint) {
-        File dir = new File("log");
+        Object[] args = joinPoint.getArgs();
+        File dir = new File("log/" + args[1]);
         if (!dir.exists()) {
             dir.mkdir();
         }
-        File logFile = new File("log/" + getDate(new Date()) + ".log");
-        System.out.println(logFile.getAbsolutePath());
+        File logFile = new File("log/" + args[1] + "/" + getDate(new Date()) + ".log");
         if (!logFile.exists()) {
             try {
                 if (!logFile.createNewFile()) {
@@ -45,20 +48,19 @@ public class OfferAspect {
                 return;
             }
         }
-        Object[] args = joinPoint.getArgs();
-        StringBuilder sb = new StringBuilder();
-        for (Object o : args) {
-            sb.append(JSON.toJSONString(o)).append("\n");
-        }
-        String jsonMessage = sb.toString();
+        List<Object> dataList = (List<Object>) args[0];
+        LogEntity entity = new LogEntity();
+        entity.setData(dataList);
+        entity.setDate(new Date().toString());
+        entity.setSize(dataList.size());
+        String jsonMessage = JSON.toJSONString(entity);
         OutputStream fos = null;
         PrintWriter pw = null;
         try {
-            fos = new FileOutputStream(logFile);
+            fos = new FileOutputStream(logFile, true);
             pw = new PrintWriter(fos);
-            pw.write("------" + new Date() + "------" + "\n");
+            pw.write(";");
             pw.write(jsonMessage);
-            pw.write("-----------------------" + "\n");
             pw.flush();
         } catch (FileNotFoundException e) {
             logger.error("Open stream error,file not found ex:" + e);
