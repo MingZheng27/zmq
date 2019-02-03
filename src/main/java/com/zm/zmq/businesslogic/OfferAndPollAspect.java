@@ -19,13 +19,17 @@ import java.util.List;
 
 @Aspect
 @Component
-public class OfferAspect {
+public class OfferAndPollAspect {
 
-    private Logger logger = LoggerFactory.getLogger(OfferAspect.class);
+    private Logger logger = LoggerFactory.getLogger(OfferAndPollAspect.class);
 
     // pointcut签名
     @Pointcut("execution(* com.zm.zmq.businesslogic.MyMessageQueue.offer(..))")
     public void offer() {
+    }
+
+    @Pointcut("execution(* com.zm.zmq.businesslogic.MyMessageQueue.poll(..))")
+    public void poll() {
     }
 
     // write log
@@ -35,7 +39,7 @@ public class OfferAspect {
         Object[] args = joinPoint.getArgs();
         File dir = new File("log/" + args[1]);
         if (!dir.exists()) {
-            dir.mkdir();
+            dir.mkdirs();
         }
         File logFile = new File("log/" + args[1] + "/" + getDate(new Date()) + ".log");
         if (!logFile.exists()) {
@@ -59,8 +63,9 @@ public class OfferAspect {
         try {
             fos = new FileOutputStream(logFile, true);
             pw = new PrintWriter(fos);
-            pw.write(";");
-            pw.write(jsonMessage);
+            pw.append(";");
+            pw.append(jsonMessage);
+            pw.append("\n");
             pw.flush();
         } catch (FileNotFoundException e) {
             logger.error("Open stream error,file not found ex:" + e);
@@ -80,10 +85,53 @@ public class OfferAspect {
 
     @After("offer()")
     public void afterOffer() {
+        logger.info("offer success,time:" + System.currentTimeMillis());
+    }
 
+    @Before("poll()")
+    public void beforePoll(JoinPoint joinPoint) {
+        Object[] args = joinPoint.getArgs();
+        logger.info("begin poll,Topic:" + args[0] + "size:" + args[1]);
+        File dir = new File("log/" + args[0]);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        File logFile = new File("log/" + args[0] + "/" + getDate(new Date()) + ".log");
+        FileOutputStream fos = null;
+        BufferedWriter writer = null;
+        try {
+            fos = new FileOutputStream(logFile, true);
+            writer = new BufferedWriter(new OutputStreamWriter(fos));
+            writer.append("poll,Topic:" + args[0] + ",size:" + args[1]);
+            writer.append("\n");
+            writer.flush();
+        } catch (IOException e) {
+            logger.error("poll occur exception:", e);
+        } finally {
+            if (null != writer) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    logger.error("close writer error",e);
+                }
+            }
+            if (null != fos) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    logger.error("close fileOutputStream error", e);
+                }
+            }
+        }
+    }
+
+    @After("poll()")
+    public void afterPoll() {
+        logger.info("poll success,time:" + System.currentTimeMillis());
     }
 
     private String getDate(Date date) {
+        // not thread safety or use ThreadLocal
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return dateFormat.format(date);
     }
